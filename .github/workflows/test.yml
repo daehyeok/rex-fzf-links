@@ -1,0 +1,62 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lua:
+    name: lua ${{ matrix.lua }} (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        lua: ["5.1.5", "luajit-2.1"]   # Rex runs Lua 5.1
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: leafo/gh-actions-lua@32909a2dea0a48c433aec79e7fcd31b4cd55800f # v13.1.0
+        with:
+          luaVersion: ${{ matrix.lua }}
+      - name: Lua tests
+        run: sh tests/run_all.sh lua
+
+  awk:
+    name: filter (${{ matrix.os }} awk)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Filter tests
+        run: sh tests/filter_test.sh
+
+  lint:
+    name: pre-commit (lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: "2.6.0"
+          args: --version
+      - name: Install pre-commit
+        run: |
+          pipx install pre-commit==4.3.0
+          shellcheck --version
+      - name: pre-commit
+        env:
+          REQUIRE_LINT_TOOLS: "1"
+          SKIP: tests # the lua and filter jobs run them
+        run: pre-commit run --all-files --show-diff-on-failure

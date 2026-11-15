@@ -1,0 +1,42 @@
+# pre-commit hooks: `pre-commit install` once, then they run on every commit.
+# All hooks are local and use tools already on PATH; nothing is downloaded.
+# shellcheck and stylua are skipped with a note when missing, unless
+# REQUIRE_LINT_TOOLS=1 (CI sets it).
+minimum_pre_commit_version: "3.2.0"
+repos:
+  - repo: local
+    hooks:
+      - id: trailing-whitespace
+        name: no trailing whitespace
+        language: pygrep
+        entry: '[ \t]+$'
+        types: [text]
+      - id: end-of-file
+        name: files end with one newline
+        language: pygrep
+        entry: '(?<!\n)\Z|\n\n\Z'
+        args: [--multiline]
+        types: [text]
+      - id: check-yaml
+        name: YAML parses
+        language: system
+        entry: ruby -ryaml -e 'ARGV.each { |f| YAML.load_file(f) }'
+        types: [yaml]
+      - id: shellcheck
+        name: shellcheck
+        language: system
+        entry: sh -c 'if command -v shellcheck >/dev/null; then exec shellcheck "$@"; fi; [ "${REQUIRE_LINT_TOOLS:-}" != 1 ] || { echo "shellcheck not found"; exit 1; }; echo "shellcheck not installed; skipped"' --
+        types: [shell]
+        verbose: true
+      - id: stylua
+        name: stylua (format check)
+        language: system
+        entry: sh -c 'if command -v stylua >/dev/null; then exec stylua --check "$@"; fi; [ "${REQUIRE_LINT_TOOLS:-}" != 1 ] || { echo "stylua not found"; exit 1; }; echo "stylua not installed; skipped"' --
+        types: [lua]
+        verbose: true
+      - id: tests
+        name: plugin tests
+        language: system
+        entry: sh tests/run_all.sh
+        pass_filenames: false
+        files: '\.(lua|sh|awk)$'

@@ -1,0 +1,8 @@
+# StyLua settings (https://github.com/JohnnyMorganz/StyLua). Checked by
+# pre-commit and CI with `stylua --check .`; fix with `stylua .`.
+syntax = "Lua51"
+column_width = 120
+indent_type = "Spaces"
+indent_width = 2
+quote_style = "AutoPreferDouble"
+call_parentheses = "Input"
