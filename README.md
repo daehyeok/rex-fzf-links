@@ -43,6 +43,22 @@ Press `alt+u` in any pane. Both actions are also in the command palette ("Pick a
 
 To update later: `git -C ~/.config/rex/plugins/rex-fzf-links pull && rex config reload`.
 
+### With Amber
+
+With [Amber](https://github.com/rawnly/amber) installed first, skip the clone and declare the plugin in `~/.config/rex/init.lua`:
+
+```lua
+local amber = dofile(os.getenv("HOME") .. "/.local/share/rex/amber/amber.lua")
+
+amber.setup({
+  plugins = {
+    { "daehyeok/rex-fzf-links", main = "fzf_links" },
+  },
+})
+```
+
+Then run `amber install`. It installs the plugin and reloads Rex; loading the config alone never installs. Add the `rex.bind` lines from step 2 as well.
+
 ## Keys
 
 | Key | Does |
